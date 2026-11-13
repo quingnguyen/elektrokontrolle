@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16202a" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mängel">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Mängelprotokoll Baustelle</title>
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui}
+img{max-width:100%}
+[hidden]{display:none!important}
+@font-face{font-family:'Barlow';font-weight:400;font-style:normal;font-display:swap;src:url(fonts/barlow-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:500;font-style:normal;font-display:swap;src:url(fonts/barlow-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:600;font-style:normal;font-display:swap;src:url(fonts/barlow-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-weight:600;font-style:normal;font-display:swap;src:url(fonts/barlow-condensed-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-weight:700;font-style:normal;font-display:swap;src:url(fonts/barlow-condensed-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-weight:500;font-style:normal;font-display:swap;src:url(fonts/ibm-plex-mono-latin-500-normal.woff2) format('woff2')}
+:root{
+  /* Layout: one-column field tool for a phone. Sticky title bar with a PE green-yellow stripe, list or form in the middle, action dock in thumb reach. */
+  --bg:#eef1f4; --surface:#ffffff; --surface2:#f5f7f9; --ink:#14202b; --muted:#566676; --line:#d3dae1;
+  --accent:#0b5fb3; --accent-ink:#ffffff;
+  --offen:#b4470c; --offen-bg:#fbe9dc;
+  --ok:#17703a; --ok-bg:#dff1e5;
+  --nach:#3d4f61; --nach-bg:#e1e7ed;
+  --gefahr:#b42318; --gefahr-bg:#fde4e1;
+  --pe-g:#1f9d55; --pe-y:#f0c419;
+  --f-head:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
+  --f-body:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e151c; --surface:#16202a; --surface2:#1c2833; --ink:#e7edf3; --muted:#97a8b8; --line:#2b3a48;
+    --accent:#5ea6f2; --accent-ink:#071421;
+    --offen:#f0a070; --offen-bg:#3a2417;
+    --ok:#7bd69a; --ok-bg:#15301f;
+    --nach:#aebccb; --nach-bg:#27333f;
+    --gefahr:#ff9a8f; --gefahr-bg:#3b1a17;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e151c; --surface:#16202a; --surface2:#1c2833; --ink:#e7edf3; --muted:#97a8b8; --line:#2b3a48;
+  --accent:#5ea6f2; --accent-ink:#071421;
+  --offen:#f0a070; --offen-bg:#3a2417;
+  --ok:#7bd69a; --ok-bg:#15301f;
+  --nach:#aebccb; --nach-bg:#27333f;
+  --gefahr:#ff9a8f; --gefahr-bg:#3b1a17;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-body);-webkit-text-size-adjust:100%;overflow-x:hidden;min-height:100vh}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:10}
+button,input,select,textarea{font-family:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.stripe{height:5px;background:repeating-linear-gradient(135deg,var(--pe-g) 0 7px,var(--pe-y) 7px 14px)}
+.top-in{display:flex;align-items:center;gap:8px;min-height:56px;max-width:680px;margin:0 auto}
+.top h1{font:600 25px/1.1 var(--f-head);letter-spacing:.01em;margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icon{width:44px;height:44px;border:0;background:none;color:var(--ink);display:grid;place-items:center;margin-left:-10px;border-radius:50%;cursor:pointer}
+
+.wrap{max-width:680px;margin:0 auto;padding-block:16px 130px;display:flex;flex-direction:column;gap:12px}
+.lead{margin:0;color:var(--muted)}
+.hint{margin:6px 0 0;font-size:14px;color:var(--muted)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);border:1.5px dashed var(--line);border-radius:8px}
+
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.dock-in{max-width:680px;margin:0 auto;display:flex;gap:10px;padding-block:10px}
+
+.btn{font:600 17px/1.1 var(--f-body);min-height:52px;padding:0 18px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;position:relative;text-align:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.wide{flex:1}
+.btn.danger{color:var(--gefahr);border-color:var(--gefahr)}
+.btn.ghost{border-color:transparent;background:none;color:var(--accent);padding:0 10px}
+.btn.small{min-height:40px;font-size:15px;padding:0 12px}
+.btn[disabled]{opacity:.5;cursor:default}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.pad{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+
+.ctl{display:block;width:100%;text-align:left;padding:14px 16px;color:inherit;font:inherit;cursor:pointer}
+.ctl-top{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.art{font:600 13px/1.2 var(--f-body);letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}
+.ex{font:600 12px/1 var(--f-body);padding:4px 8px;border-radius:99px;background:var(--nach-bg);color:var(--nach)}
+.ctl-title{font:600 23px/1.15 var(--f-head);margin-top:6px;overflow-wrap:anywhere}
+.ctl-sub{color:var(--muted);font-size:15px;margin-top:2px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+.pill{display:inline-flex;align-items:center;min-height:28px;padding:0 11px;border-radius:99px;font:600 13px/1 var(--f-body);border:0;white-space:nowrap}
+button.pill{min-height:38px;cursor:pointer}
+.s-offen{background:var(--offen-bg);color:var(--offen)}
+.s-behoben{background:var(--ok-bg);color:var(--ok)}
+.s-nach{background:var(--nach-bg);color:var(--nach)}
+.g-sicher{background:var(--gefahr-bg);color:var(--gefahr)}
+.g-beheben,.g-hinweis{background:var(--surface2);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+
+details.head summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;flex-direction:column;gap:2px;position:relative;padding-right:44px}
+details.head summary::-webkit-details-marker{display:none}
+details.head summary::after{content:"";position:absolute;right:18px;top:50%;width:9px;height:9px;border-right:2.4px solid var(--muted);border-bottom:2.4px solid var(--muted);transform:translateY(-70%) rotate(45deg)}
+details.head[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
+.head .meta{color:var(--muted);font-size:15px;overflow-wrap:anywhere}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;padding:4px 16px 16px;border-top:1px solid var(--line);padding-top:14px}
+
+.lab{display:block;font:600 12px/1.2 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.in{width:100%;min-height:50px;padding:12px 14px;font-size:16px;line-height:1.35;background:var(--surface2);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;-webkit-appearance:none;appearance:none}
+textarea.in{min-height:132px;resize:vertical}
+.in::placeholder{color:var(--muted)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:42px;padding:0 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:600 15px/1 var(--f-body);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.chip .n{font:500 13px var(--f-mono);color:var(--muted)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip.on .n{color:var(--accent-ink)}
+
+.m{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px}
+.m-nr{font:500 15px/1.6 var(--f-mono);color:var(--muted);min-width:2ch}
+.m-main{background:none;border:0;padding:0;margin:0;text-align:left;color:inherit;font:inherit;cursor:pointer;min-width:0;display:flex;flex-direction:column;gap:6px}
+.m-text{font-weight:500;overflow-wrap:anywhere}
+.m-meta{display:flex;gap:6px 12px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.mini{display:flex;gap:6px}
+.mini img{width:46px;height:46px;object-fit:cover;border-radius:4px;border:1px solid var(--line);background:var(--surface2)}
+
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.seg button{min-height:50px;padding:4px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface2);color:var(--ink);font:600 15px/1.15 var(--f-body);cursor:pointer;overflow-wrap:anywhere}
+.seg button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+.cat{max-height:46vh;overflow-y:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface2)}
+.cat h4{margin:0;padding:10px 12px 4px;font:600 12px/1.2 var(--f-body);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);position:sticky;top:0;background:var(--surface2)}
+.cat button{display:block;width:100%;text-align:left;padding:12px;min-height:46px;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:500 16px/1.3 var(--f-body);cursor:pointer}
+.cat .none{padding:14px;color:var(--muted)}
+
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.thumb{position:relative;aspect-ratio:1;max-width:100%}
+.thumb img{width:100%;height:100%;object-fit:cover;border-radius:6px;border:1px solid var(--line);background:var(--surface2)}
+.thumb button{position:absolute;top:4px;right:4px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.68);color:#fff;font-size:20px;line-height:1;cursor:pointer}
+
+.paper{background:var(--surface);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.pp{padding:16px}
+.paper h2{font:700 30px/1.05 var(--f-head);margin:0}
+.paper .sub{margin:4px 0 12px;color:var(--accent);font:600 14px/1.2 var(--f-body);letter-spacing:.07em;text-transform:uppercase}
+.paper dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;margin:0 0 10px}
+.paper dt{color:var(--muted);font-size:14px}
+.paper dd{margin:0;overflow-wrap:anywhere}
+.sum{font:500 14px/1.4 var(--f-mono);color:var(--muted);margin:0 0 4px;padding-top:10px;border-top:1px solid var(--line)}
+.pd{border-top:1px solid var(--line);padding:12px 0;display:flex;flex-direction:column;gap:6px}
+.pd-h{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.pd-h b{font:500 15px var(--f-mono)}
+.pd p{margin:0;overflow-wrap:anywhere}
+.sig{margin-top:22px;padding-top:6px;border-top:1px solid var(--ink);width:70%;font-size:13px;color:var(--muted)}
+.chk{display:flex;gap:10px;align-items:center;min-height:44px}
+.chk input{width:22px;height:22px;accent-color:var(--accent)}
+h3{font:600 20px/1.1 var(--f-head);margin:0}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:8px;font-weight:600;z-index:20;max-width:calc(100% - 32px);text-align:center}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div id="toast" class="toast" role="status" hidden></div>
+<noscript>Diese Seite braucht JavaScript.</noscript>
+
+<script src="vendor/jspdf.umd.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+var KEY='mt.v1';
+var ART=['Abnahmekontrolle','Schlusskontrolle','Periodische Kontrolle'];
+
+/* Beispielkatalog: vom Kontrolleur anzupassen. Eigene Bausteine lassen sich im Editor merken. */
+var CAT=[
+ {c:'Verteiler und Schutz',i:[
+  'Verteiler nicht oder ungenügend beschriftet',
+  'Stromkreisverzeichnis oder Schema fehlt bzw. ist nicht aktuell',
+  'Überstromschutz passt nicht zum Leiterquerschnitt',
+  'Fehlerstromschutzschalter (RCD) fehlt oder löst nicht korrekt aus',
+  'Abdeckungen im Verteiler fehlen']},
+ {c:'Erdung und Potentialausgleich',i:[
+  'Hauptpotentialausgleich fehlt oder ist unvollständig',
+  'Zusätzlicher Potentialausgleich im Nassraum fehlt',
+  'Schutzleiter nicht angeschlossen oder Durchgang nicht gegeben',
+  'Erdung nicht zugänglich oder nicht messbar']},
+ {c:'Leitungen und Verbindungen',i:[
+  'Leiterquerschnitt ungenügend',
+  'Leitung nicht befestigt oder Zugentlastung fehlt',
+  'Offene Klemmstelle oder Verbindung ausserhalb einer Dose',
+  'Leitung mechanisch beschädigt',
+  'Leiterfarben oder Kennzeichnung nicht korrekt']},
+ {c:'Brandschutz',i:[
+  'Brandabschottung bei Durchführung fehlt oder ist mangelhaft',
+  'Leitungsführung im Fluchtweg nicht zulässig']},
+ {c:'Material und Montage',i:[
+  'Abdeckung oder Frontplatte fehlt oder ist beschädigt',
+  'Schutzart (IP) passt nicht zum Raum',
+  'Steckdose oder Schalter lose oder beschädigt',
+  'Leuchte oder Gerät nicht fachgerecht befestigt']},
+ {c:'Spezialanlagen',i:[
+  'PV-Anlage: Kennzeichnung oder Trennstelle fehlt',
+  'Ladestation: Zuleitung oder Schutzkonzept nicht dokumentiert',
+  'Notbeleuchtung: Funktion nicht gegeben']},
+ {c:'Dokumentation',i:[
+  'Messprotokoll fehlt',
+  'Sicherheitsnachweis (SiNa) unvollständig',
+  'Pläne und Schemas nicht aktuell']}
+];
+
+/* ---------- helpers ---------- */
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function iso(d){d=d||new Date();var m=d.getMonth()+1,dd=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dd<10?'0':'')+dd;}
+function fd(s){if(!s)return '';var p=String(s).split('-');return p.length===3?p[2]+'.'+p[1]+'.'+p[0]:s;}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.k);toast.k=setTimeout(function(){t.hidden=true;},2600);}
+function slug(s){return String(s||'Kontrolle').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,40)||'Kontrolle';}
+function blobToDataUrl(b){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result);};r.onerror=rej;r.readAsDataURL(b);});}
+function dataUrlToBlob(u){var p=u.split(','),m=/data:([^;]+)/.exec(p[0]);var b=atob(p[1]),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:m?m[1]:'image/jpeg'});}
+
+/* ---------- storage ---------- */
+var storageOk=true;
+function load(){try{var s=localStorage.getItem(KEY);if(s)return JSON.parse(s);}catch(e){storageOk=false;}return null;}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){storageOk=false;}}
+
+function sample(){
+  return {id:uid(),example:true,objekt:'Beispiel: MFH Bahnhofstrasse 12',adresse:'Musterstadt',auftraggeber:'Muster Elektro AG',art:ART[0],datum:iso(),kontrolleur:'',
+    mangel:[
+      {id:uid(),text:'Verteiler nicht oder ungenügend beschriftet',kategorie:'Verteiler und Schutz',ort:'Keller, Hauptverteiler',fotos:[],created:Date.now()},
+      {id:uid(),text:'Hauptpotentialausgleich fehlt oder ist unvollständig',kategorie:'Erdung und Potentialausgleich',ort:'Keller, Hausanschluss',fotos:[],created:Date.now()+1},
+      {id:uid(),text:'Abdeckung oder Frontplatte fehlt oder ist beschädigt',kategorie:'Material und Montage',ort:'2. OG, Küche',fotos:[],created:Date.now()+2}
+    ]};
+}
+var S=load()||{controls:[],custom:[],inspector:''};
+S.controls=S.controls||[];S.custom=S.custom||[];
+if(!S.controls.length&&!S.seeded){S.controls.push(sample());S.seeded=true;save();}
+
+/* photos live in IndexedDB; mem is a cache and fallback */
+var idb=null,mem={},urls={};
+function openDB(){return new Promise(function(res){try{var r=indexedDB.open('mt-photos',1);r.onupgradeneeded=function(){r.result.createObjectStore('p',{keyPath:'id'});};r.onsuccess=function(){idb=r.result;res();};r.onerror=function(){res();};r.onblocked=function(){res();};}catch(e){res();}});}
+function putPhoto(rec){mem[rec.id]=rec;if(!idb)return Promise.resolve();return new Promise(function(res){try{var tx=idb.transaction('p','readwrite');tx.objectStore('p').put(rec);tx.oncomplete=function(){res();};tx.onerror=function(){res();};tx.onabort=function(){res();};}catch(e){res();}});}
+function getPhoto(id){if(mem[id])return Promise.resolve(mem[id]);if(!idb)return Promise.resolve(null);return new Promise(function(res){try{var rq=idb.transaction('p').objectStore('p').get(id);rq.onsuccess=function(){var v=rq.result||null;if(v)mem[id]=v;res(v);};rq.onerror=function(){res(null);};}catch(e){res(null);}});}
+function delPhoto(id){delete mem[id];if(urls[id]){try{URL.revokeObjectURL(urls[id]);}catch(e){}delete urls[id];}if(!idb)return;try{idb.transaction('p','readwrite').objectStore('p').delete(id);}catch(e){}}
+function processFile(file){return new Promise(function(res,rej){var u=URL.createObjectURL(file),im=new Image();im.onload=function(){var max=1600,w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,max/Math.max(w,h)),cw=Math.round(w*k),ch=Math.round(h*k),cv=document.createElement('canvas');cv.width=cw;cv.height=ch;cv.getContext('2d').drawImage(im,0,0,cw,ch);cv.toBlob(function(b){URL.revokeObjectURL(u);if(b)res({blob:b,w:cw,h:ch});else rej(new Error('blob'));},'image/jpeg',0.72);};im.onerror=function(){URL.revokeObjectURL(u);rej(new Error('img'));};im.src=u;});}
+
+/* ---------- ui state ---------- */
+var U={view:'list',cid:null,draft:null,catOpen:false,catQ:'',headOpen:false,confirm:null,lastKey:'',busy:false,out:{pdf:null,bak:null}};
+var OFF=false;
+function cur(){for(var i=0;i<S.controls.length;i++)if(S.controls[i].id===U.cid)return S.controls[i];return null;}
+var app=document.getElementById('app');
+
+var ICON_BACK='<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function top(title,back){return '<header class="top"><div class="stripe"></div><div class="top-in gut">'+(back?'<button class="icon" data-act="'+back+'" aria-label="Zurück">'+ICON_BACK+'</button>':'')+'<h1 id="hdr">'+esc(title)+'</h1></div></header>';}
+function dock(inner){return '<div class="dock"><div class="dock-in gut">'+inner+'</div></div>';}
+function fld(lab,id,sc,f,v,type,ph,list){return '<div><label class="lab" for="'+id+'">'+lab+'</label><input class="in" id="'+id+'" data-s="'+sc+'" data-f="'+f+'" type="'+(type||'text')+'" value="'+esc(v)+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(list?' list="'+list+'"':'')+' autocomplete="off"></div>';}
+function thumbsMini(m){if(!m.fotos.length)return '';return '<div class="mini">'+m.fotos.slice(0,4).map(function(id){return '<img data-pid="'+id+'" alt="Foto">';}).join('')+'</div>';}
+
+/* ---------- views ---------- */
+function vList(){
+  var h=top('Kontrollen')+'<main class="wrap gut">';
+  h+='<p class="lead">Kontrollen auf diesem Gerät. Mängel mit Foto erfassen und das Protokoll als PDF sichern.</p>';
+  h+='<p class="hint" style="margin:0">'+(OFF?'Offline bereit: Die App läuft auch ohne Netz.':'Einmal mit Netz öffnen, danach läuft die App auch ohne Netz.')+'</p>';
+  if(!storageOk)h+='<div class="empty">Der Browser speichert hier keine Daten. Bitte regelmässig die Datensicherung im Protokoll nutzen.</div>';
+  if(!S.controls.length)h+='<div class="empty">Noch keine Kontrolle. Lege unten die erste an.</div>';
+  S.controls.slice().sort(function(a,b){return (b.datum||'').localeCompare(a.datum||'');}).forEach(function(c){
+    h+='<button class="card ctl" data-act="open" data-id="'+c.id+'"><div class="ctl-top"><span class="art">'+esc(c.art)+'</span>'+(c.example?'<span class="ex">Beispiel</span>':'')+'</div>'+
+      '<div class="ctl-title">'+esc(c.objekt||'Ohne Objektname')+'</div>'+
+      '<div class="ctl-sub">'+esc([fd(c.datum),c.adresse].filter(Boolean).join(' · '))+'</div>'+
+      '<div class="pills"><span class="pill s-nach">'+(c.mangel.length===1?'1 Mangel':c.mangel.length+' Mängel')+'</span></div></button>';
+  });
+  h+='</main>'+dock('<button class="btn primary wide" data-act="newctl">+ Neue Kontrolle</button>');
+  return h;
+}
+
+function vControl(){
+  var c=cur(),total=c.mangel.length;
+  var h=top(c.objekt||'Neue Kontrolle','toList')+'<main class="wrap gut">';
+  h+='<details class="card head" id="head"'+(U.headOpen?' open':'')+'><summary><span class="art">'+esc(c.art)+'</span><span class="meta">'+esc([fd(c.datum),c.adresse,c.auftraggeber].filter(Boolean).join(' · ')||'Kopfdaten ergänzen')+'</span></summary><div class="grid">'+
+    fld('Objekt','c-objekt','ctl','objekt',c.objekt,'text','z. B. MFH Bahnhofstrasse 12')+
+    fld('Adresse / Ort','c-adresse','ctl','adresse',c.adresse)+
+    fld('Auftraggeber','c-auftraggeber','ctl','auftraggeber',c.auftraggeber)+
+    '<div><label class="lab" for="c-art">Kontrollart</label><select class="in" id="c-art" data-s="ctl" data-f="art">'+ART.map(function(a){return '<option'+(a===c.art?' selected':'')+'>'+a+'</option>';}).join('')+'</select></div>'+
+    fld('Datum','c-datum','ctl','datum',c.datum,'date')+
+    fld('Kontrolleur','c-kontrolleur','ctl','kontrolleur',c.kontrolleur)+
+    '</div></details>';
+  if(total)h+='<p class="hint" style="margin:0">'+(total===1?'1 Mangel':total+' Mängel')+' erfasst</p>';
+  else h+='<div class="empty">Noch keine Mängel. Tippe unten auf «Mangel erfassen».</div>';
+  c.mangel.forEach(function(m,i){
+    h+='<article class="m"><div class="m-nr">'+(i+1)+'</div><button class="m-main" data-act="edit" data-id="'+m.id+'"><span class="m-text">'+esc(m.text||'(nur Foto)')+'</span>'+
+      (m.ort?'<span class="m-meta"><span>'+esc(m.ort)+'</span></span>':'')+thumbsMini(m)+'</button></article>';
+  });
+  h+='<div class="row" style="margin-top:8px"><button class="btn ghost danger" data-act="delctl">'+(U.confirm==='delctl'?'Wirklich löschen? Nochmal tippen':'Kontrolle löschen')+'</button></div>';
+  h+='</main>'+dock('<button class="btn" data-act="proto">Protokoll</button><button class="btn primary wide" data-act="newm">+ Mangel erfassen</button>');
+  return h;
+}
+
+function orte(c){
+  var seen={},out=[];
+  c.mangel.slice().reverse().forEach(function(m){if(m.ort&&!seen[m.ort]){seen[m.ort]=1;out.push(m.ort);}});
+  ['Keller','Hauptverteiler','Treppenhaus','Technikraum','Aussenbereich'].forEach(function(o){if(!seen[o]){seen[o]=1;out.push(o);}});
+  return out.slice(0,8);
+}
+function catHtml(){
+  var q=U.catQ.trim().toLowerCase(),all=CAT.slice(),h='',any=false;
+  if(S.custom.length)all.push({c:'Eigene Textbausteine',i:S.custom});
+  all.forEach(function(g){
+    var its=g.i.filter(function(t){return !q||t.toLowerCase().indexOf(q)>=0||g.c.toLowerCase().indexOf(q)>=0;});
+    if(!its.length)return;
+    any=true;
+    h+='<h4>'+esc(g.c)+'</h4>'+its.map(function(t){return '<button data-act="pick" data-c="'+esc(g.c)+'" data-t="'+esc(t)+'">'+esc(t)+'</button>';}).join('');
+  });
+  return any?h:'<div class="none">Kein Treffer. Beschreibe den Mangel frei im Textfeld.</div>';
+}
+function vEditor(){
+  var c=cur(),d=U.draft;
+  var nr=d.isNew?c.mangel.length+1:c.mangel.findIndex(function(m){return m.id===d.id;})+1;
+  var h=top(d.isNew?'Neuer Mangel':'Mangel Nr. '+nr,'cancelEdit')+'<main class="wrap gut">';
+  h+='<section class="card pad"><div class="row between"><label class="lab" for="f-text" style="margin:0">Mangel</label><button class="btn small" data-act="togglecat">'+(U.catOpen?'Katalog schliessen':'Aus Katalog wählen')+'</button></div>';
+  if(U.catOpen)h+='<input class="in" id="catQ" data-s="cat" type="search" placeholder="Suchen, z. B. Potential" value="'+esc(U.catQ)+'" autocomplete="off"><div id="catList" class="cat">'+catHtml()+'</div>';
+  h+='<textarea class="in" id="f-text" data-s="draft" data-f="text" rows="5" placeholder="z. B. Verteiler 2: Beschriftung der Abgänge fehlt">'+esc(d.text)+'</textarea>';
+  h+='<p class="hint" style="margin:0">Diktieren: Mikrofon-Taste der Tastatur antippen (iPhone und Android).</p>';
+  h+='<div class="row"><button class="btn ghost small" data-act="remember">Text als Baustein merken</button></div></section>';
+
+  h+='<section class="card pad"><label class="lab" for="f-ort" style="margin:0">Ort</label><input class="in" id="f-ort" data-s="draft" data-f="ort" value="'+esc(d.ort)+'" placeholder="Raum, Verteiler, Stockwerk" autocomplete="off">'+
+     '<div class="chips">'+orte(c).map(function(o){return '<button class="chip" data-act="chip" data-v="'+esc(o)+'">'+esc(o)+'</button>';}).join('')+'</div></section>';
+
+  h+='<section class="card pad"><span class="lab" style="margin:0">Fotos</span>';
+  if(d.fotos.length)h+='<div class="thumbs">'+d.fotos.map(function(id){return '<div class="thumb"><img data-pid="'+id+'" alt="Foto"><button data-act="rmphoto" data-id="'+id+'" aria-label="Foto entfernen">×</button></div>';}).join('')+'</div>';
+  h+='<div class="row"><label class="btn wide">Foto aufnehmen<input class="vh" type="file" accept="image/*" capture="environment" id="in-cam"></label>'+
+     '<label class="btn wide">Aus Fotos wählen<input class="vh" type="file" accept="image/*" multiple id="in-gal"></label></div></section>';
+
+  h+='</main>'+dock((d.isNew?'':'<button class="btn danger" data-act="delm">'+(U.confirm==='delm'?'Sicher?':'Löschen')+'</button>')+'<button class="btn primary wide" data-act="savem">Speichern</button>');
+  return h;
+}
+
+function vProto(){
+  var c=cur();
+  var list=c.mangel.map(function(m,i){return {m:m,nr:i+1};});
+  var h=top('Protokoll','toControl')+'<main class="wrap gut">';
+  h+='<article class="paper"><div class="stripe"></div><div class="pp"><h2>Mängelprotokoll</h2><p class="sub">'+esc(c.art)+'</p><dl>'+
+    [['Objekt',c.objekt],['Adresse',c.adresse],['Auftraggeber',c.auftraggeber],['Kontrolleur',c.kontrolleur],['Datum',fd(c.datum)]].filter(function(r){return r[1];}).map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1])+'</dd>';}).join('')+'</dl>'+
+    '<p class="sum">'+(c.mangel.length===1?'1 Mangel':c.mangel.length+' Mängel')+'</p>';
+  if(!list.length)h+='<div class="pd">Noch keine Mängel erfasst.</div>';
+  list.forEach(function(x){
+    var m=x.m;
+    h+='<div class="pd"><div class="pd-h"><b>Nr. '+x.nr+(m.ort?' · '+esc(m.ort):'')+'</b></div><p>'+esc(m.text||'(nur Foto)')+'</p>'+thumbsMini(m)+'</div>';
+  });
+  h+='<div class="sig">Unterschrift Kontrolleur</div></div></article>';
+  h+='<section class="card pad">'+
+     '<button class="btn primary" data-act="pdf"'+(window.jspdf?'':' disabled')+'>PDF erstellen</button>'+
+     (U.out.pdf?'<button class="btn" data-act="outpdf">PDF teilen oder speichern</button><p class="hint" style="margin:0">Bereit: '+esc(U.out.pdf.name)+'</p>':'<p class="hint" style="margin:0">'+(window.jspdf?'Das PDF enthält Kopfdaten, alle Mängel und die Fotos. Danach erscheint die Schaltfläche zum Teilen oder Speichern.':'Die PDF-Funktion konnte nicht geladen werden. Bitte die App neu öffnen.')+'</p>')+'</section>';
+  h+='<section class="card pad"><h3>Datensicherung</h3><p class="hint" style="margin:0">Die Daten liegen nur auf diesem Gerät. Browser können gespeicherte Daten nach längerer Nichtnutzung löschen. Sichere deshalb nach jeder Kontrolle.</p>'+
+     '<div class="row"><button class="btn wide" data-act="backup">Sicherung erstellen</button><label class="btn wide">Wiederherstellen<input class="vh" type="file" accept=".json,application/json" id="in-bak"></label></div>'+(U.out.bak?'<button class="btn" data-act="outbak">Sicherung teilen oder speichern</button>':'')+'</section>';
+  h+='</main>'+dock('<button class="btn wide" data-act="toControl">Zurück zu den Mängeln</button>');
+  return h;
+}
+
+function render(){
+  var key=U.view+':'+(U.cid||'')+':'+(U.draft?U.draft.id:''),same=key===U.lastKey,y=window.scrollY||0;
+  var h=U.view==='list'?vList():U.view==='control'?vControl():U.view==='editor'?vEditor():vProto();
+  app.innerHTML=h;
+  U.lastKey=key;
+  window.scrollTo(0,same?y:0);
+  hydrate();
+}
+function go(v){U.view=v;U.confirm=null;render();}
+function hydrate(){
+  app.querySelectorAll('img[data-pid]').forEach(function(img){
+    var id=img.getAttribute('data-pid');
+    if(urls[id]){img.src=urls[id];return;}
+    getPhoto(id).then(function(r){if(!r)return;if(!urls[id])urls[id]=URL.createObjectURL(r.blob);img.src=urls[id];});
+  });
+}
+
+/* ---------- actions ---------- */
+function startDraft(m){
+  var c=cur();
+  if(m){U.draft={id:m.id,text:m.text,kategorie:m.kategorie||'',ort:m.ort,fotos:m.fotos.slice(),created:m.created,isNew:false,newPhotos:[],removed:[]};}
+  else{var last=c.mangel[c.mangel.length-1];U.draft={id:uid(),text:'',kategorie:'',ort:last?last.ort:'',fotos:[],created:Date.now(),isNew:true,newPhotos:[],removed:[]};}
+  U.catOpen=false;U.catQ='';
+}
+function saveDraft(){
+  var d=U.draft,c=cur();
+  if(!d.text.trim()&&!d.fotos.length){toast('Bitte Beschreibung oder Foto ergänzen');return;}
+  var rec={id:d.id,text:d.text.trim(),kategorie:d.kategorie,ort:d.ort.trim(),fotos:d.fotos.slice(),created:d.created};
+  var i=c.mangel.findIndex(function(m){return m.id===d.id;});
+  if(i>=0)c.mangel[i]=rec;else c.mangel.push(rec);
+  d.removed.forEach(delPhoto);
+  save();U.draft=null;toast('Gespeichert');go('control');
+}
+function cancelDraft(){
+  if(U.draft)U.draft.newPhotos.forEach(delPhoto);
+  U.draft=null;go('control');
+}
+function addPhotos(fl){
+  var arr=Array.prototype.slice.call(fl||[]);
+  if(!arr.length||!U.draft)return;
+  toast('Foto wird verarbeitet …');
+  var p=Promise.resolve();
+  arr.forEach(function(f){
+    p=p.then(function(){
+      return processFile(f).then(function(r){
+        var id=uid();
+        return putPhoto({id:id,blob:r.blob,w:r.w,h:r.h}).then(function(){U.draft.fotos.push(id);U.draft.newPhotos.push(id);});
+      }).catch(function(){toast('Foto konnte nicht gelesen werden');});
+    });
+  });
+  p.then(function(){if(U.view==='editor'){render();}});
+}
+
+var ACT={
+  newctl:function(){var c={id:uid(),objekt:'',adresse:'',auftraggeber:'',art:ART[0],datum:iso(),kontrolleur:S.inspector||'',mangel:[]};S.controls.push(c);save();U.cid=c.id;U.headOpen=true;go('control');},
+  open:function(t){U.cid=t.dataset.id;U.headOpen=false;go('control');},
+  toList:function(){U.cid=null;go('list');},
+  toControl:function(){go('control');},
+  newm:function(){startDraft(null);go('editor');},
+  edit:function(t){var m=cur().mangel.find(function(x){return x.id===t.dataset.id;});if(m){startDraft(m);go('editor');}},
+  cancelEdit:cancelDraft,
+  savem:saveDraft,
+  delm:function(){
+    if(U.confirm!=='delm'){U.confirm='delm';render();return;}
+    var c=cur(),d=U.draft;
+    var m=c.mangel.find(function(x){return x.id===d.id;});
+    if(m)m.fotos.forEach(delPhoto);
+    d.newPhotos.forEach(delPhoto);
+    c.mangel=c.mangel.filter(function(x){return x.id!==d.id;});
+    save();U.draft=null;toast('Mangel gelöscht');go('control');
+  },
+  delctl:function(){
+    if(U.confirm!=='delctl'){U.confirm='delctl';render();return;}
+    var c=cur();c.mangel.forEach(function(m){m.fotos.forEach(delPhoto);});
+    S.controls=S.controls.filter(function(x){return x.id!==c.id;});
+    save();U.cid=null;toast('Kontrolle gelöscht');go('list');
+  },
+  togglecat:function(){U.catOpen=!U.catOpen;render();if(U.catOpen){var q=document.getElementById('catQ');if(q)q.focus();}},
+  pick:function(t){var d=U.draft,x=t.dataset.t;d.text=d.text.trim()?d.text.trim()+'; '+x:x;d.kategorie=t.dataset.c||'';U.catOpen=false;render();},
+  remember:function(){var d=U.draft,x=d.text.trim();if(!x){toast('Erst einen Text eingeben');return;}var known=S.custom.indexOf(x)>=0||CAT.some(function(g){return g.i.indexOf(x)>=0;});if(known){toast('Ist schon im Katalog');return;}S.custom.push(x);save();toast('Als Baustein gemerkt');},
+  chip:function(t){U.draft.ort=t.dataset.v;var i=document.getElementById('f-ort');if(i)i.value=U.draft.ort;},
+  rmphoto:function(t){var id=t.dataset.id,d=U.draft;d.fotos=d.fotos.filter(function(x){return x!==id;});d.removed.push(id);render();},
+  proto:function(){U.out={pdf:null,bak:null};go('proto');},
+  pdf:exportPdf,
+  backup:exportBackup,
+  outpdf:function(){if(U.out.pdf)saveFile(U.out.pdf.name,U.out.pdf.blob);},
+  outbak:function(){if(U.out.bak)saveFile(U.out.bak.name,U.out.bak.blob);}
+};
+app.addEventListener('click',function(e){var t=e.target.closest('[data-act]');if(!t||!app.contains(t))return;var f=ACT[t.dataset.act];if(f)f(t,e);});
+app.addEventListener('input',onField);
+app.addEventListener('change',function(e){
+  var t=e.target;
+  if(t.type==='file'){if(t.id==='in-bak')restore(t.files&&t.files[0]);else addPhotos(t.files);return;}
+  onField(e);
+});
+app.addEventListener('toggle',function(e){if(e.target.id==='head')U.headOpen=e.target.open;},true);
+function onField(e){
+  var t=e.target,f=t.dataset&&t.dataset.f,sc=t.dataset&&t.dataset.s;
+  if(sc==='cat'){U.catQ=t.value;var l=document.getElementById('catList');if(l)l.innerHTML=catHtml();return;}
+  if(!f)return;
+  if(sc==='ctl'){var c=cur();if(!c)return;c[f]=t.value;if(f==='kontrolleur')S.inspector=t.value;save();if(f==='objekt'){var h=document.getElementById('hdr');if(h)h.textContent=c.objekt||'Neue Kontrolle';}}
+  else if(sc==='draft'&&U.draft){U.draft[f]=t.value;}
+}
+
+/* ---------- export ---------- */
+function saveFile(name,data){
+  var blob=data instanceof Blob?data:new Blob([data],{type:'application/octet-stream'});
+  var file=null;
+  try{file=new File([blob],name,{type:blob.type||'application/octet-stream'});}catch(e){}
+  var canShare=false;
+  try{canShare=!!(file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]}));}catch(e){}
+  if(canShare){
+    return navigator.share({files:[file],title:name}).then(function(){toast('Gespeichert');}).catch(function(err){
+      if(err&&err.name==='AbortError')return;
+      downloadBlob(blob,name);
+    });
+  }
+  downloadBlob(blob,name);
+  return Promise.resolve();
+}
+function downloadBlob(blob,name){
+  try{
+    var u=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=u;a.download=name;a.style.display='none';document.body.appendChild(a);a.click();
+    setTimeout(function(){a.remove();URL.revokeObjectURL(u);},60000);
+    toast('Datei wird heruntergeladen');
+  }catch(e){toast('Speichern nicht möglich');}
+}
+async function buildPdf(c){
+  var J=window.jspdf.jsPDF,doc=new J({unit:'mm',format:'a4'});
+  var W=210,M=15,CW=W-2*M,y=M;
+  function need(h){if(y+h>282){doc.addPage();y=M;}}
+  var x=M,i=0;
+  while(x<M+CW){var w=Math.min(4,M+CW-x);if(i%2)doc.setFillColor(240,196,25);else doc.setFillColor(31,157,85);doc.rect(x,y,w,2.2,'F');x+=w;i++;}
+  y+=11;
+  doc.setFont('helvetica','bold');doc.setFontSize(20);doc.setTextColor(20,32,43);doc.text('Mängelprotokoll',M,y);y+=7;
+  doc.setFont('helvetica','normal');doc.setFontSize(12);doc.setTextColor(11,95,179);doc.text(c.art,M,y);y+=8;
+  doc.setFontSize(10.5);
+  [['Objekt',c.objekt],['Adresse',c.adresse],['Auftraggeber',c.auftraggeber],['Kontrolleur',c.kontrolleur],['Datum',fd(c.datum)]].forEach(function(r){
+    if(!r[1])return;
+    doc.setFont('helvetica','bold');doc.setTextColor(86,102,118);doc.text(r[0],M,y);
+    doc.setFont('helvetica','normal');doc.setTextColor(20,32,43);doc.text(doc.splitTextToSize(String(r[1]),CW-32),M+32,y);y+=5.5;
+  });
+  y+=1;doc.setFontSize(10);doc.setTextColor(86,102,118);
+  doc.text(c.mangel.length+(c.mangel.length===1?' Mangel':' Mängel'),M,y);y+=4;
+  doc.setDrawColor(211,218,225);doc.line(M,y,M+CW,y);y+=7;
+  var list=c.mangel.map(function(m,k){return {m:m,nr:k+1};});
+  if(!list.length){doc.setFontSize(11);doc.setTextColor(20,32,43);doc.text('Noch keine Mängel erfasst.',M,y);y+=8;}
+  for(var k=0;k<list.length;k++){
+    var m=list[k].m,nr=list[k].nr;
+    var lines=doc.splitTextToSize(m.text||'(nur Foto)',CW);
+    need(10+lines.length*5+7);
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(20,32,43);
+    doc.text('Nr. '+nr+(m.ort?'   '+m.ort:''),M,y);
+    doc.setFont('helvetica','normal');
+    y+=5.5;
+    doc.setFontSize(10.5);doc.setTextColor(20,32,43);doc.text(lines,M,y);y+=lines.length*5;
+    y+=1;
+    var recs=[];
+    for(var q=0;q<m.fotos.length;q++){var r=await getPhoto(m.fotos[q]);if(r)recs.push(r);}
+    var cols=3,gap=3,pw=(CW-gap*(cols-1))/cols;
+    for(var a=0;a<recs.length;a+=cols){
+      var row=recs.slice(a,a+cols),dims=row.map(function(r){var ratio=r.h/r.w,ww=pw,hh=ww*ratio;if(hh>62){hh=62;ww=hh/ratio;}return {w:ww,h:hh};});
+      var rh=Math.max.apply(null,dims.map(function(d){return d.h;}));
+      need(rh+3);
+      for(var b=0;b<row.length;b++){
+        var du=await blobToDataUrl(row[b].blob);
+        doc.addImage(du,'JPEG',M+b*(pw+gap),y,dims[b].w,dims[b].h);
+      }
+      y+=rh+3;
+    }
+    y+=3;need(4);doc.setDrawColor(225,230,235);doc.line(M,y,M+CW,y);y+=6;
+  }
+  need(24);y+=10;doc.setDrawColor(20,32,43);doc.line(M,y,M+75,y);y+=5;
+  doc.setFontSize(9);doc.setTextColor(86,102,118);doc.text('Unterschrift Kontrolleur',M,y);
+  var pages=doc.getNumberOfPages();
+  for(var p=1;p<=pages;p++){doc.setPage(p);doc.setFontSize(8.5);doc.setTextColor(120,132,144);doc.text((c.objekt||'Mängelprotokoll')+'  |  Seite '+p+' von '+pages,M,291);}
+  return doc.output('blob');
+}
+async function exportPdf(){
+  if(U.busy||!window.jspdf)return;
+  var c=cur();if(!c)return;
+  U.busy=true;toast('PDF wird erstellt …');
+  try{
+    var blob=await buildPdf(c);
+    U.out.pdf={name:'Maengelprotokoll_'+slug(c.objekt)+'_'+(c.datum||iso())+'.pdf',blob:blob};
+    toast('PDF ist bereit');
+  }catch(e){toast('PDF konnte nicht erstellt werden');}
+  U.busy=false;
+  if(U.view==='proto')render();
+}
+async function exportBackup(){
+  try{
+    var ph={};
+    for(var i=0;i<S.controls.length;i++){
+      var ms=S.controls[i].mangel;
+      for(var j=0;j<ms.length;j++)for(var k=0;k<ms[j].fotos.length;k++){
+        var id=ms[j].fotos[k],r=await getPhoto(id);
+        if(r)ph[id]={d:await blobToDataUrl(r.blob),w:r.w,h:r.h};
+      }
+    }
+    var json=JSON.stringify({v:1,exported:new Date().toISOString(),controls:S.controls,custom:S.custom,photos:ph});
+    U.out.bak={name:'mangel-backup_'+iso()+'.json',blob:new Blob([json],{type:'application/json'})};
+    toast('Sicherung ist bereit');if(U.view==='proto')render();
+  }catch(e){toast('Sicherung fehlgeschlagen');}
+}
+async function restore(file){
+  if(!file)return;
+  try{
+    var j=JSON.parse(await file.text());
+    if(!j||!Array.isArray(j.controls))throw new Error('format');
+    var ph=j.photos||{};
+    for(var id in ph){await putPhoto({id:id,blob:dataUrlToBlob(ph[id].d),w:ph[id].w,h:ph[id].h});}
+    j.controls.forEach(function(c){var i=S.controls.findIndex(function(x){return x.id===c.id;});if(i>=0)S.controls[i]=c;else S.controls.push(c);});
+    (j.custom||[]).forEach(function(t){if(S.custom.indexOf(t)<0)S.custom.push(t);});
+    save();toast(j.controls.length+' Kontrolle(n) wiederhergestellt');render();
+  }catch(e){toast('Datei nicht lesbar');}
+}
+
+openDB().then(function(){render();});
+render();
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(function(){return navigator.serviceWorker.ready;}).then(function(){OFF=true;if(U.view==='list')render();}).catch(function(){});
+}
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+})();
+</script>
+</body>
+</html>
